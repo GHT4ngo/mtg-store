@@ -127,7 +127,7 @@ Parses MTGGoldfish/Arena format decklists, resolves split-card and DFC names, ba
 ## Project status
 
 Active — running in a retail environment. Not open source.
-Built 2024–2025 as part of a data engineering program.
+Built 2026 as part of a data engineering program.
 
 ---
 
