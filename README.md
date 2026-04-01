@@ -5,6 +5,14 @@
 
 ---
 
+## Live Demo
+
+**[prism-card-emporium.lovable.app](https://prism-card-emporium.lovable.app/)**
+
+> **Note:** The frontend is always accessible, but live data (card prices, stock levels, search) requires the backend pipeline to be running on a local machine. If the shop appears empty or search returns no results, the backend is currently offline.
+
+---
+
 ## Overview
 
 Most card shops run on generic e-commerce platforms with manual price updates. This system replaces that with an automated data pipeline that syncs prices from two European market sources daily, exposes a fast search API, and provides a customer-facing storefront with features purpose-built for MTG retail.
@@ -116,9 +124,11 @@ Parses MTGGoldfish/Arena format decklists, resolves split-card and DFC names, ba
 
 ---
 
-## Screenshots
+## Live Demo
 
-*Coming soon — reach out for a live demo.*
+**[prism-card-emporium.lovable.app](https://prism-card-emporium.lovable.app/)**
+
+> The frontend is always accessible. Live data requires the local backend to be running — if search returns no results, the pipeline is currently offline.
 
 ---
 
@@ -130,4 +140,3 @@ Built 2024–2025 as part of a data engineering program.
 ---
 
 *Interested in this solution for your store? Get in touch.*
-
