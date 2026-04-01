@@ -124,14 +124,6 @@ Parses MTGGoldfish/Arena format decklists, resolves split-card and DFC names, ba
 
 ---
 
-## Live Demo
-
-**[prism-card-emporium.lovable.app](https://prism-card-emporium.lovable.app/)**
-
-> The frontend is always accessible. Live data requires the local backend to be running — if search returns no results, the pipeline is currently offline.
-
----
-
 ## Project status
 
 Active — running in a retail environment. Not open source.
@@ -140,3 +132,4 @@ Built 2024–2025 as part of a data engineering program.
 ---
 
 *Interested in this solution for your store? Get in touch.*
+
