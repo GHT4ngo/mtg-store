@@ -103,9 +103,6 @@ User: "blue instant cheaper than 20kr"
 ### Decklist checker
 Parses MTGGoldfish/Arena format decklists, resolves split-card and DFC names, batch-queries all requested cards in a single SQL call, and auto-selects the optimal printing per card (cheapest → best condition → can fill full quantity → most stock). Users can split a 4-of across two different printings and add all to cart in one click.
 
-### Judge promo routing
-Alphaspel codes `J21/J22/J23` conflict with Scryfall's Jumpstart set codes. A `VALUES` CTE maps judge codes to correct Scryfall set identifiers, with name-based verification to prevent cross-contamination.
-
 ---
 
 ## What I learned
