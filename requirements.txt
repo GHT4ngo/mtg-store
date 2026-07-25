@@ -1,0 +1,11 @@
+anthropic
+dbt-postgres
+fastapi
+ijson
+mysql-connector-python
+psycopg2-binary
+pydantic
+python-dotenv
+python-multipart
+requests
+uvicorn[standard]

@@ -1,135 +1,141 @@
-# Betaspel Singles — MTG Store Platform
+# Betaspel Singles — MTG Store proof of concept
 
-> A full-stack inventory, pricing, and sales platform for a Magic: The Gathering card store.
-> Built as a data engineering school project, deployed in a real retail environment.
+A completed proof of concept for a Magic: The Gathering store: data ingestion,
+warehouse transformations, a FastAPI service, and a React storefront.
 
----
+> **Status: dormant and preserved.** The concept was successfully implemented, but it is
+> not under active development or operated as a public service. The repository is kept
+> launch-ready for demonstrations and future reuse.
 
-## Live Demo
+## What it demonstrates
 
-**[betaspel.t4ngo.com](https://betaspel.t4ngo.com/)**
+- A bronze/silver/gold data pipeline using PostgreSQL and dbt
+- Card and price ingestion from public sources
+- Optional inventory and order ingestion from a shop's MySQL/POS database
+- Indexed card search through FastAPI
+- A React/TypeScript storefront with filters, decklist search, trade-in flows, and
+  administration screens
+- Optional natural-language search using Anthropic
 
-> **Note:** The frontend is always accessible, but live data (card prices, stock levels, search) requires the backend pipeline to be running on a local machine. If the shop appears empty or search returns no results, the backend is currently offline.
+No production credentials, customer data, downloaded card datasets, database volumes, or
+generated build files are included.
 
----
+## Linux quick start
 
-## Overview
+Requirements:
 
-Most card shops run on generic e-commerce platforms with manual price updates. This system replaces that with an automated data pipeline that syncs prices from two European market sources daily, exposes a fast search API, and provides a customer-facing storefront with features purpose-built for MTG retail.
+- Linux
+- Docker with Docker Compose v2
+- Python 3.11 or newer
+- Node.js 20 or newer with npm
 
-**Live inventory:** ~43 000 products across ~800 sets
-**Price sources:** Cardmarket (EU market leader) + Scryfall
-**Pipeline runtime:** ~30 seconds end-to-end
+```bash
+git clone https://github.com/GHT4ngo/MTG-Store-Proof-of-Concept.git
+cd MTG-Store-Proof-of-Concept
 
----
+./scripts/setup.sh
+./scripts/start.sh
+```
 
-## Features
+Open:
 
-### Customer-facing
-- **Card browse** — filter by set, color, type, rarity, CMC, price, foil, language, oracle text
-- **AI search** — natural language queries powered by Claude (e.g. *"cheap blue instant under 10kr"*)
-- **Decklist checker** — paste or upload any MTGGoldfish decklist; see which cards are in stock, auto-select cheapest versions, split quantities across multiple printings, add directly to cart
-- **Trade-in** — customers submit trade-in requests; staff review and import accepted cards directly to inventory
+- Storefront: <http://localhost:5173>
+- API status: <http://localhost:8000>
+- Interactive API documentation: <http://localhost:8000/docs>
 
-### Staff / Admin
-- **Bulk import** — import new stock via Manabox CSV export
-- **Price overrides** — set manual EUR or SEK prices per card, bypassing the automated pricing
-- **No-price dashboard** — cards in stock with missing market data, with inline price input
-- **Match quality report** — flags uncertain card-to-market-data matches for review
+The first setup creates a local `.env`, Python virtual environment, frontend dependencies,
+and dbt packages. The first launch starts a Dockerized PostgreSQL database. If your Linux
+user cannot access Docker directly, the launcher asks for `sudo` once. The database remains
+available between launches; stopping the app does not delete it.
 
----
+## Load card data
+
+The application starts without downloading the large source datasets. To populate the
+catalog from Cardmarket, Scryfall, and Riksbank:
+
+```bash
+./scripts/refresh-data.sh
+```
+
+This download can be large and may take several minutes. Downloaded files are cached in
+`data/`, which is intentionally excluded from Git.
+
+The original shop inventory and sales analytics depend on a separate MySQL/POS system.
+Add its connection details to `.env` only if you have a compatible database. Without those
+credentials, the public catalog and pricing pipeline still run, while store-specific stock
+and order ingestion are skipped.
+
+## Configuration
+
+Copy `.env.example` manually if needed:
+
+```bash
+cp .env.example .env
+```
+
+Important variables:
+
+- `PG_*`: local PostgreSQL connection used by the API and dbt
+- `MYSQL_*`: optional private shop/POS connection
+- `ANTHROPIC_API_KEY`: optional natural-language search
+- `DATA_DIR`: local download cache
+- `VITE_API_URL`: frontend API address, configured in `frontend/.env`
+
+Never commit `.env` files.
+
+## Repository structure
+
+```text
+backend/          FastAPI service and ingestion scripts
+database/init/    Local PostgreSQL bootstrap schema
+dbt/              Silver and gold warehouse transformations
+frontend/         React, TypeScript, Vite, and shadcn/ui
+scripts/          Linux setup, launch, and refresh commands
+docker-compose.yml
+requirements.txt
+```
 
 ## Architecture
 
-```
-Scryfall API ──┐
-Cardmarket  ──►  ingest_bronze.py  →  PostgreSQL: bronze schema
-Riksbank FX ──┘                              │
-                                             ▼
-MySQL (live POS) → ingest_stock.py →  bronze.stock
-                                             │
-                                      dbt run (~30s)
-                                             │
-                              ┌──────────────┴──────────────┐
-                              ▼                             ▼
-                       silver_cards                   silver_stock
-                    (prices in SEK,               (parsed references,
-                     foil/promo flags,             set matching,
-                     USD fallback chain)            condition discounts)
-                              └──────────────┬──────────────┘
-                                             ▼
-                                        gold_cards
-                                    (enriched, indexed,
-                                     API-ready view)
-                                             │
-                                      FastAPI (api.py)
-                                             │
-                                    React frontend (Lovable)
+```text
+Cardmarket ─┐
+Scryfall  ──┼─> Python ingestion ─> PostgreSQL bronze
+Riksbank  ──┘                            │
+                                         v
+Optional shop MySQL ───────────────> dbt silver/gold
+                                         │
+                                         v
+                                  FastAPI <─> React
 ```
 
-### Key design decisions
+## Useful commands
 
-**Pre-computed tables over live joins** — dbt materializes all transformations into physical tables. The API does simple indexed lookups, not complex CTEs at query time. Result: sub-50ms card search across 100k+ rows.
+```bash
+# Start the local application
+./scripts/start.sh
 
-**Stock delta layer** — between pipeline runs, stock changes (sales, trade-ins) accumulate in `bronze.stock_delta`. The API applies these in-memory so the frontend always shows current stock without a full rebuild.
+# Refresh data and rebuild the warehouse
+./scripts/refresh-data.sh
 
-**Multi-tier card matching** — MySQL references (`MKM-042-F`) are matched to Scryfall card data through 8 fallback strategies: exact set+number → judge promo mapping → set name fuzzy match → collector number cross-reference. Match quality is tracked per row.
+# Stop PostgreSQL as well
+docker compose down
 
-**Price fallback chain** — `COALESCE(NULLIF(cardmarket_eur, 0), scryfall_eur, scryfall_usd × fx_rate)` ensures cards with sparse Cardmarket data still get priced via Scryfall.
+# Remove the local database volume (destructive)
+docker compose down -v
 
----
+# Backend syntax check
+python3 -m compileall -q backend
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Data ingestion | Python (requests, mysql-connector) |
-| Data warehouse | PostgreSQL 15 |
-| Transformations | dbt Core 1.11 |
-| Text search | PostgreSQL pg_trgm (GIN indexes) |
-| API | FastAPI + psycopg2 |
-| Frontend | React + TypeScript (Lovable / shadcn/ui) |
-| AI search | Anthropic Claude API (tool-use agentic loop) |
-| FX rates | Riksbank open API |
-| Price data | Cardmarket S3 bulk export + Scryfall bulk API |
-
----
-
-## Selected Technical Highlights
-
-### Automated pricing pipeline
-Cards are priced using a piecewise linear EUR→SEK markup function with rarity tiers and sell minimums. The same function runs both in dbt (as a PostgreSQL function) and in Python (for manual price input), guaranteeing consistency.
-
-### AI-powered search (`POST /agent/search`)
-An agentic loop (up to 6 iterations) uses Claude Haiku with two tools — `find_sets()` and `find_cards()` — to convert natural language into structured filter objects. Returns both filter params and UI chip labels for display.
-
-```
-User: "blue instant cheaper than 20kr"
-→ { color_identity: "%U%", type_line: "%Instant%", max_price: 20, in_stock: true }
+# Frontend checks
+npm --prefix frontend run lint
+npm --prefix frontend run test
+npm --prefix frontend run build
 ```
 
-### Decklist checker
-Parses MTGGoldfish/Arena format decklists, resolves split-card and DFC names, batch-queries all requested cards in a single SQL call, and auto-selects the optimal printing per card (cheapest → best condition → can fill full quantity → most stock). Users can split a 4-of across two different printings and add all to cart in one click.
+## Notes
 
----
-
-## What I learned
-
-- Designing a **medallion architecture** (bronze/silver/gold) for a real production workload
-- Writing **complex dbt models** with multi-CTE matching logic and post-hook index management
-- The practical difference between **Cardmarket's sparse data** and Scryfall's comprehensive catalog, and how to build a fallback chain that handles both
-- Building a **FastAPI service** that applies in-memory deltas to cached query results
-- Integrating the **Anthropic Claude API** with tool use for structured data extraction
-- Debugging subtle **psycopg2 quirks** (% escaping, regex dialect differences)
-
----
-
-## Project status
-
-Active — running in a retail environment. Not open source.
-Built 2026 as part of a data engineering program.
-
----
-
-*Interested in this solution for your store? Get in touch.*
-
+- The public setup is intentionally Linux-first and does not include the original Windows
+  batch files, executables, logs, cached datasets, virtual environments, or obsolete source
+  copies.
+- Store-mutating admin features require the compatible private MySQL/POS database.
+- This is a portfolio-quality proof of concept, not a supported production commerce system.

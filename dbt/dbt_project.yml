@@ -1,0 +1,43 @@
+name: 'mtg_dbt'
+version: '1.0.0'
+config-version: 2
+
+profile: 'jaffle_shop'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  mtg_dbt:
+    silver:
+      +materialized: table
+      +schema: silver
+    gold:
+      +materialized: table
+      +schema: gold
+      gold_cards:
+        +post-hook:
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_name_trgm    ON {{ this }} USING gin (name gin_trgm_ops)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_set_code     ON {{ this }} (set_code)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_rarity       ON {{ this }} (rarity)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_in_stock     ON {{ this }} (in_stock)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_price        ON {{ this }} (sell_price_sek)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_cmc          ON {{ this }} (cmc)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_foil         ON {{ this }} (is_foil)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_color_trgm   ON {{ this }} USING gin (color_identity gin_trgm_ops)"
+          - "CREATE INDEX IF NOT EXISTS {{ this.name }}_type_trgm    ON {{ this }} USING gin (type_line gin_trgm_ops)"
+      gold_sales_daily:
+        +post-hook:
+          - "CREATE INDEX IF NOT EXISTS gold_sales_daily_order_date  ON {{ this }} (order_date)"
+          - "CREATE INDEX IF NOT EXISTS gold_sales_daily_set_group   ON {{ this }} (set_group)"
+          - "CREATE INDEX IF NOT EXISTS gold_sales_daily_channel     ON {{ this }} (channel)"
+          - "CREATE INDEX IF NOT EXISTS gold_sales_daily_month_start ON {{ this }} (month_start)"
+          - "CREATE INDEX IF NOT EXISTS gold_sales_daily_game        ON {{ this }} (game)"

@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 6%;
+    --foreground: 40 20% 90%;
+
+    --card: 240 8% 10%;
+    --card-foreground: 40 20% 90%;
+
+    --popover: 240 8% 12%;
+    --popover-foreground: 40 20% 90%;
+
+    --primary: 43 80% 55%;
+    --primary-foreground: 240 10% 6%;
+
+    --secondary: 240 6% 16%;
+    --secondary-foreground: 40 15% 80%;
+
+    --muted: 240 6% 14%;
+    --muted-foreground: 240 5% 50%;
+
+    --accent: 43 60% 40%;
+    --accent-foreground: 40 20% 95%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 18%;
+    --input: 240 6% 18%;
+    --ring: 43 80% 55%;
+
+    --radius: 0.5rem;
+
+    /* Rarity colors */
+    --rarity-common: 0 0% 60%;
+    --rarity-uncommon: 210 20% 65%;
+    --rarity-rare: 43 80% 55%;
+    --rarity-mythic: 15 85% 55%;
+
+    /* Custom */
+    --gold-glow: 43 80% 55%;
+    --surface-hover: 240 6% 18%;
+
+    --sidebar-background: 240 8% 8%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 43 80% 55%;
+    --sidebar-primary-foreground: 240 10% 6%;
+    --sidebar-accent: 240 6% 14%;
+    --sidebar-accent-foreground: 40 20% 90%;
+    --sidebar-border: 240 6% 18%;
+    --sidebar-ring: 43 80% 55%;
+
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground antialiased;
+    background: hsl(240 10% 6%);
+  }
+
+  @media (min-width: 768px) {
+    body {
+      background: transparent;
+    }
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Cinzel', serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Cinzel', serif;
+  }
+
+  .gold-shimmer {
+    background: linear-gradient(
+      135deg,
+      hsl(43 80% 45%) 0%,
+      hsl(43 90% 65%) 50%,
+      hsl(43 80% 45%) 100%
+    );
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-glow {
+    transition: all 0.3s ease;
+  }
+  .card-glow:hover {
+    box-shadow: 0 0 25px hsl(43 80% 55% / 0.2), 0 8px 32px hsl(0 0% 0% / 0.5);
+    transform: translateY(-2px);
+  }
+
+  .interactive-hover {
+    transition: all 0.2s ease;
+  }
+  .interactive-hover:hover {
+    background-color: hsl(var(--secondary) / 0.6);
+    box-shadow: 0 0 12px hsl(43 80% 55% / 0.08);
+  }
+
+  .rarity-common { color: hsl(var(--rarity-common)); }
+  .rarity-uncommon { color: hsl(var(--rarity-uncommon)); }
+  .rarity-rare { color: hsl(var(--rarity-rare)); }
+  .rarity-mythic { color: hsl(var(--rarity-mythic)); }
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}

@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16
+    container_name: mtg-store-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PG_DATABASE:-mtg}
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-change-me}
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    volumes:
+      - mtg_store_pgdata:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${PG_DATABASE:-mtg}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mtg_store_pgdata:
